@@ -1,0 +1,29 @@
+{
+  "appId": "com.company.clean-production-evaluation",
+  "productName": "危险废物焚烧处置清洁生产评价系统",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "public/**/*",
+    "node_modules/**/*"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "public/icon.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "清洁生产评价系统",
+    "artifactName": "清洁生产评价系统_${version}_${arch}.${ext}"
+  },
+  "compression": "maximum",
+  "asar": true,
+  "publish": {
+    "provider": "github"
+  }
+}

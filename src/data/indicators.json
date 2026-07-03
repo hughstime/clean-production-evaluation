@@ -1,0 +1,725 @@
+{
+  "categories": [
+    {
+      "id": "production_process",
+      "name": "生产工艺及装备",
+      "order": 1,
+      "weight": 0.22,
+      "indicators": [
+        {
+          "id": "storage_info_management",
+          "name": "信息化管理水平",
+          "weight": 0.10,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "智能化设备管理台账系统，实现储存状态、容量预警、储存时限自动提醒等功能；贮存设施警示标识清晰，包装桶危废标签规范，危险废物储存时间不超过一年",
+              "value": 1
+            },
+            "level2": {
+              "description": "电子化信息系统管理（如ERP系统或监管平台对接），实现入库、出库、储存时长自动记录；贮存设施警示标识清晰，包装桶危废标签规范，危险废物储存时间不超过一年",
+              "value": 2
+            },
+            "level3": {
+              "description": "纸质或基础电子台账管理方式，贮存设施警示标识清晰，包装桶危废标签规范，危险废物储存时间不超过一年",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "anti_seepage_measures",
+          "name": "防渗措施",
+          "weight": 0.10,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "贮存设施地面与裙脚采取表面防渗措施，直接接触地面的危废进行基础防渗，防渗效果较好（防渗层≥1m厚粘土层，渗透系数≤10⁻⁷cm/s，或≥2mm厚HDPE膜，渗透系数≤10⁻¹⁰cm/s）。采用不同防腐工艺应建议贮存分区",
+              "value": 1
+            },
+            "level2": {
+              "description": "同Ⅰ级",
+              "value": 2
+            },
+            "level3": {
+              "description": "贮存设施地面与裙脚采取表面防渗措施，直接接触地面的危废进行基础防渗",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "environmental_pollution_control",
+          "name": "环境污染控制能力",
+          "weight": 0.05,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "实现智能化联动管理，具备自动防火设施评价，具有高效的环境污染控制能力。日常巡检，导流槽、收集池等关键点位无溢流、泄漏风险，收集液及时处置",
+              "value": 1
+            },
+            "level2": {
+              "description": "同Ⅰ级",
+              "value": 2
+            },
+            "level3": {
+              "description": "按规设置有效消防设施；库房强制机械通风，废气有组织收集，控制异味逸散。日常巡检，导流槽、收集池等关键点位无可见溢流与泄漏现象，收集液及时处置",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "incineration_runtime",
+          "name": "焚烧线年运行时间",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "h",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": ">7000",
+            "level2": ">6000",
+            "level3": ">5000"
+          }
+        },
+        {
+          "id": "incineration_shutdown_times",
+          "name": "各条焚烧线停炉检修次数",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "次/年",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤3次/年",
+            "level2": "3-4次/年",
+            "level3": "≤5次/年"
+          }
+        },
+        {
+          "id": "furnace_temp_low_count",
+          "name": "炉膛温度<850℃记录次数（每天，除启停炉外）",
+          "weight": 0.15,
+          "type": "quantitative",
+          "unit": "次/天",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤5次",
+            "level2": "≤5次",
+            "level3": "≤5次"
+          }
+        },
+        {
+          "id": "co_daily_average",
+          "name": "一氧化碳日均值",
+          "weight": 0.15,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤30",
+            "level2": "≤50",
+            "level3": "≤80"
+          }
+        },
+        {
+          "id": "heat_reduction_rate",
+          "name": "热灼减率",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "%",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "<5%",
+            "level2": "<5%",
+            "level3": "<5%"
+          }
+        },
+        {
+          "id": "dcs_coverage",
+          "name": "DCS系统覆盖范围",
+          "weight": 0.05,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "覆盖全流程的DCS系统，关键单元（焚烧、余热锅炉、尾气治理等）配套智能化控制策略",
+              "value": 1
+            },
+            "level2": {
+              "description": "企业DCS系统覆盖主要工艺段和关键单元",
+              "value": 2
+            },
+            "level3": {
+              "description": "企业DCS系统覆盖核心工艺单元",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "energy_efficient_product_ratio",
+          "name": "一级能效产品比例",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "%",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≥90%",
+            "level2": "≥80%",
+            "level3": "≥70%"
+          }
+        }
+      ]
+    },
+    {
+      "id": "energy_consumption",
+      "name": "能源消耗",
+      "order": 2,
+      "weight": 0.12,
+      "indicators": [
+        {
+          "id": "waste_specific_energy",
+          "name": "吨入厂危废综合能耗",
+          "weight": 1.00,
+          "type": "quantitative",
+          "unit": "kgce/t",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤40",
+            "level2": "≤60",
+            "level3": "≤80"
+          },
+          "formula": "Ed = Σ(eᵢ × pᵢ) / W"
+        }
+      ]
+    },
+    {
+      "id": "water_consumption",
+      "name": "水资源消耗",
+      "order": 3,
+      "weight": 0.06,
+      "indicators": [
+        {
+          "id": "waste_specific_water",
+          "name": "吨入厂危废水消耗量",
+          "weight": 1.00,
+          "type": "quantitative",
+          "unit": "m³/t",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤8",
+            "level2": "≤10",
+            "level3": "≤12"
+          },
+          "formula": "Cw = Ts / W"
+        }
+      ]
+    },
+    {
+      "id": "raw_material_consumption",
+      "name": "原辅料资源消耗",
+      "order": 4,
+      "weight": 0.10,
+      "indicators": [
+        {
+          "id": "denitration_agent_consumption",
+          "name": "吨入炉危废脱硝辅料消耗量",
+          "weight": 0.50,
+          "type": "quantitative",
+          "unit": "kg/t",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤4.5",
+            "level2": "≤6.0",
+            "level3": "≤7.5"
+          }
+        },
+        {
+          "id": "desulfurization_agent_consumption",
+          "name": "吨入炉危废脱硫脱酸辅料消耗量",
+          "weight": 0.50,
+          "type": "quantitative",
+          "unit": "kg/t",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤8",
+            "level2": "≤12",
+            "level3": "≤15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pollutant_emission",
+      "name": "污染物产生与排放",
+      "order": 5,
+      "weight": 0.30,
+      "indicators": [
+        {
+          "id": "dioxin_emission",
+          "name": "二噁英排放浓度（测定均值）",
+          "weight": 0.15,
+          "type": "quantitative",
+          "unit": "ngTEQ/Nm³",
+          "isRestrictive": true,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.3",
+            "level2": "≤0.4",
+            "level3": "≤0.5"
+          }
+        },
+        {
+          "id": "particulate_matter",
+          "name": "烟气颗粒物浓度（日均值）",
+          "weight": 0.15,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": true,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤10",
+            "level2": "≤15",
+            "level3": "≤20"
+          }
+        },
+        {
+          "id": "so2_concentration",
+          "name": "SO₂浓度（日均值）",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": true,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤30",
+            "level2": "≤40",
+            "level3": "≤50"
+          }
+        },
+        {
+          "id": "nox_concentration",
+          "name": "NOₓ浓度（日均值）",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤150",
+            "level2": "≤200",
+            "level3": "≤250"
+          }
+        },
+        {
+          "id": "hf_concentration",
+          "name": "HF浓度（日均值）",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤1",
+            "level2": "≤2",
+            "level3": "≤4"
+          }
+        },
+        {
+          "id": "hcl_concentration",
+          "name": "HCl浓度（日均值）",
+          "weight": 0.10,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤10",
+            "level2": "≤30",
+            "level3": "≤50"
+          }
+        },
+        {
+          "id": "mercury_compound",
+          "name": "汞及其化合物（以Hg计，测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.05",
+            "level2": "≤0.05",
+            "level3": "≤0.05"
+          }
+        },
+        {
+          "id": "thallium_compound",
+          "name": "铊及其化合物（以Tl计，测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.05",
+            "level2": "≤0.05",
+            "level3": "≤0.05"
+          }
+        },
+        {
+          "id": "cadmium_compound",
+          "name": "镉及其化合物（以Cd计，测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.05",
+            "level2": "≤0.05",
+            "level3": "≤0.05"
+          }
+        },
+        {
+          "id": "lead_compound",
+          "name": "铅及其化合物（以Pb计，测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.5",
+            "level2": "≤0.5",
+            "level3": "≤0.5"
+          }
+        },
+        {
+          "id": "arsenic_compound",
+          "name": "砷及其化合物（以As计，测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.5",
+            "level2": "≤0.5",
+            "level3": "≤0.5"
+          }
+        },
+        {
+          "id": "chromium_compound",
+          "name": "铬及其化合物（以Cr计，测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤0.5",
+            "level2": "≤0.5",
+            "level3": "≤0.5"
+          }
+        },
+        {
+          "id": "heavy_metals_sum",
+          "name": "锡+锑+铜+锰+镍+钴合计（测定均值）",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "mg/Nm³",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "≤3.0",
+            "level2": "≤3.0",
+            "level3": "≤3.0"
+          }
+        },
+        {
+          "id": "bottom_ash_output_rate",
+          "name": "炉渣产出率",
+          "weight": 0.06,
+          "type": "quantitative",
+          "unit": "%",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "<25%",
+            "level2": "<30%",
+            "level3": "<35%"
+          }
+        },
+        {
+          "id": "fly_ash_output_rate",
+          "name": "飞灰产出率",
+          "weight": 0.03,
+          "type": "quantitative",
+          "unit": "%",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": "<5%",
+            "level2": "<10%",
+            "level3": "<15%"
+          }
+        }
+      ]
+    },
+    {
+      "id": "greenhouse_gas",
+      "name": "温室气体排放",
+      "order": 6,
+      "weight": 0.05,
+      "indicators": [
+        {
+          "id": "carbon_reduction_management",
+          "name": "碳减排管理",
+          "weight": 1.00,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "定期开展主要产品碳足迹评价和碳盘查",
+              "value": 1
+            },
+            "level2": {
+              "description": "定期开展主要产品碳足迹评价和碳盘查",
+              "value": 2
+            },
+            "level3": {
+              "description": "定期开展碳盘查",
+              "value": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "clean_production_management",
+      "name": "清洁生产管理",
+      "order": 7,
+      "weight": 0.15,
+      "indicators": [
+        {
+          "id": "clean_production_audit",
+          "name": "清洁生产审核",
+          "weight": 0.20,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "按政府规定要求制定计划，全流程定期审核，中/高费方案≥80%；间隔≤5年",
+              "value": 1
+            },
+            "level2": {
+              "description": "同Ⅰ级",
+              "value": 2
+            },
+            "level3": {
+              "description": "部分生产工序定期审核，中/高费方案≥60%；间隔≤5年",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "organization_personnel",
+          "name": "组织机构（人员分工）",
+          "weight": 0.15,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "建立清洁生产管理机构，人员分工明确、职责清晰",
+              "value": 1
+            },
+            "level2": {
+              "description": "同Ⅰ级",
+              "value": 2
+            },
+            "level3": {
+              "description": "同Ⅰ级",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "organization_system",
+          "name": "组织机构（制度建设）",
+          "weight": 0.15,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "建立并执行清洁生产管理制度和奖惩制度",
+              "value": 1
+            },
+            "level2": {
+              "description": "同Ⅰ级",
+              "value": 2
+            },
+            "level3": {
+              "description": "同Ⅰ级",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "self_monitoring",
+          "name": "污染物自行监测制度",
+          "weight": 0.20,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "常态化实时智能监测",
+              "value": 1
+            },
+            "level2": {
+              "description": "第三方抽测+定期自测",
+              "value": 2
+            },
+            "level3": {
+              "description": "定期自测",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "emergency_plan",
+          "name": "应急预案与演练",
+          "weight": 0.10,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "每年演练",
+              "value": 1
+            },
+            "level2": {
+              "description": "每年演练",
+              "value": 2
+            },
+            "level3": {
+              "description": "有预案，定期演练（频次>1年/次）",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "energy_management",
+          "name": "节能管理",
+          "weight": 0.20,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": false,
+          "benchmarks": {
+            "level1": {
+              "description": "体系健全，组织架构完善，高层领导分管，量化目标，绩效挂钩，全员培训",
+              "value": 1
+            },
+            "level2": {
+              "description": "职责明确，专人负责，管理流程较规范，定期培训宣传",
+              "value": 2
+            },
+            "level3": {
+              "description": "职责基本明确，有初步组织架构，节能目标和指标初步制定",
+              "value": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "resource_recycling",
+      "name": "资源循环利用",
+      "order": 8,
+      "weight": 0.10,
+      "isBonus": true,
+      "indicators": [
+        {
+          "id": "waste_alkali_recycling",
+          "name": "废碱循环利用",
+          "weight": 0.20,
+          "type": "qualitative",
+          "unit": "",
+          "isRestrictive": false,
+          "isBonus": true,
+          "benchmarks": {
+            "level1": {
+              "description": "开展废碱循环利用",
+              "value": 1
+            },
+            "level2": {
+              "description": "开展废碱循环利用",
+              "value": 2
+            },
+            "level3": {
+              "description": "开展废碱循环利用",
+              "value": 3
+            }
+          }
+        },
+        {
+          "id": "fly_ash_utilization",
+          "name": "飞灰资源化利用",
+          "weight": 0.40,
+          "type": "quantitative",
+          "unit": "%",
+          "isRestrictive": false,
+          "isBonus": true,
+          "benchmarks": {
+            "level1": ">70%",
+            "level2": ">50%",
+            "level3": ">30%"
+          }
+        },
+        {
+          "id": "bottom_ash_utilization",
+          "name": "炉渣资源化利用",
+          "weight": 0.40,
+          "type": "quantitative",
+          "unit": "%",
+          "isRestrictive": false,
+          "isBonus": true,
+          "benchmarks": {
+            "level1": ">60%",
+            "level2": ">40%",
+            "level3": ">20%"
+          }
+        }
+      ]
+    }
+  ]
+}
