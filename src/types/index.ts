@@ -77,6 +77,7 @@ export interface RestrictiveCheck {
 export interface EvaluationResult {
   level: '未达标' | 'Ⅲ级' | 'Ⅱ级' | 'Ⅰ级';
   levelScore: number;
+  levelScores: LevelScores;
   isRestrictivePassL1: boolean;
   isRestrictivePassL2: boolean;
   isRestrictivePassL3: boolean;

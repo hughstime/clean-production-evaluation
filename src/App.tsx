@@ -6,6 +6,7 @@ import Step2 from './pages/Step2';
 import Step3 from './pages/Step3';
 import Step4 from './pages/Step4';
 import { useStore } from './store';
+import indicatorData from './data/indicators.json';
 import './App.css';
 
 // Lucide风格SVG图标
@@ -47,6 +48,8 @@ const STEPS = [
   { key: 4, title: '结果报告', subtitle: '查看评价结果', icon: <IconFileText /> },
 ];
 
+const indicatorCount = indicatorData.categories.reduce((total, category) => total + category.indicators.length, 0);
+
 function AppContent() {
   const { currentStep } = useStore();
 
@@ -78,7 +81,7 @@ function AppContent() {
             <div className="feature-card">
               <IconClipboard />
               <div className="feature-card-title">指标录入</div>
-              <div className="feature-card-sub">39项指标</div>
+              <div className="feature-card-sub">{indicatorCount}项指标</div>
             </div>
             <div className="feature-card">
               <IconBarChart />

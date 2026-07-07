@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { EnterpriseInfo, IndicatorInput, EvaluationResult, StepType, AppState } from '../types';
+import { EnterpriseInfo, IndicatorInput, EvaluationResult, StepType, AppState, CategoryDefinition } from '../types';
 import { EvaluationEngine } from '../utils/evaluation';
 import indicatorData from '../data/indicators.json';
 
 const evaluationEngine = new EvaluationEngine();
+const categories = indicatorData.categories as unknown as CategoryDefinition[];
 
 const createEnterpriseId = () => {
   if (globalThis.crypto?.randomUUID) {
@@ -30,7 +31,7 @@ interface Store extends AppState {
   reset: () => void;
 
   // Getters
-  getCurrentCategory: () => any;
+  getCurrentCategory: () => CategoryDefinition | null;
   getProgress: () => number;
   getTotalIndicators: () => number;
   getCompletedIndicators: () => number;
@@ -79,7 +80,7 @@ export const useStore = create<Store>()(
         try {
           const result = evaluationEngine.evaluate(
             state.indicatorInputs,
-            indicatorData.categories
+            categories
           );
           set({ evaluationResult: result });
           return result;
@@ -105,7 +106,6 @@ export const useStore = create<Store>()(
 
         // 假设Step 2的当前类别可以通过某种方式确定
         // 这里简化处理，实际可能需要更复杂的逻辑
-        const categories = indicatorData.categories;
         return categories[0]; // 默认返回第一个类别
       },
 
@@ -126,7 +126,7 @@ export const useStore = create<Store>()(
       },
 
       getTotalIndicators: () => {
-        return indicatorData.categories.reduce(
+        return categories.reduce(
           (total, category) => total + category.indicators.length,
           0
         );

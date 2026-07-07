@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { App as AntApp, Checkbox } from 'antd';
 import { useStore } from '../store';
+import { CategoryDefinition, IndicatorDefinition, IndicatorInput } from '../types';
 import indicatorData from '../data/indicators.json';
 
 // Tab图标（每个类别的小图标）
@@ -17,7 +18,7 @@ const TAB_ICONS: Record<string, string> = {
 
 // 定性指标
 const QualitativeIndicator = ({ indicator, value, onChange, isApplicable, onApplicableChange }: {
-  indicator: any; value: any; onChange: (v: number) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void;
+  indicator: IndicatorDefinition; value: number; onChange: (v: number) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void;
 }) => {
   const levels = [
     { key: 1, label: 'Ⅰ级', desc: typeof indicator.benchmarks.level1 === 'object' ? indicator.benchmarks.level1.description : indicator.benchmarks.level1 },
@@ -58,7 +59,7 @@ const QualitativeIndicator = ({ indicator, value, onChange, isApplicable, onAppl
 
 // 定量指标
 const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApplicableChange }: {
-  indicator: any; value: string; onChange: (v: string) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void;
+  indicator: IndicatorDefinition; value: string; onChange: (v: string) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void;
 }) => (
   <div className="indicator-card">
     <div className="indicator-card-header">
@@ -69,7 +70,7 @@ const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApp
         <div className="indicator-meta">
           {indicator.unit && <>单位: {indicator.unit}&nbsp;&nbsp;</>}
           权重: <span className="weight-label">{indicator.weight}</span>
-          <span className="benchmark-link" title={`Ⅰ级≤${indicator.benchmarks.level1}　Ⅱ级≤${indicator.benchmarks.level2}　Ⅲ级≤${indicator.benchmarks.level3}`}>
+          <span className="benchmark-link" title={`Ⅰ级 ${indicator.benchmarks.level1} | Ⅱ级 ${indicator.benchmarks.level2} | Ⅲ级 ${indicator.benchmarks.level3}`}>
             ⓘ 基准值
           </span>
         </div>
@@ -93,7 +94,7 @@ const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApp
 );
 
 // 类别内容
-const CategoryContent = ({ category }: { category: any }) => {
+const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
   const { indicatorInputs, updateIndicatorInput } = useStore();
   return (
     <div>
@@ -106,8 +107,8 @@ const CategoryContent = ({ category }: { category: any }) => {
         </h3>
         <span style={{ color: '#6b7280', fontSize: 14 }}>一级权重：<b style={{ color: '#0D2339' }}>{category.weight}</b></span>
       </div>
-      {category.indicators.map((ind: any) => {
-        const input = indicatorInputs[ind.id] || { value: '', isApplicable: true };
+      {category.indicators.map((ind) => {
+        const input: IndicatorInput = indicatorInputs[ind.id] ?? { id: ind.id, value: '', isApplicable: true };
         return ind.type === 'qualitative' ? (
           <QualitativeIndicator
             key={ind.id} indicator={ind} value={input.selectedLevel || 0}
@@ -117,7 +118,7 @@ const CategoryContent = ({ category }: { category: any }) => {
           />
         ) : (
           <QuantitativeIndicator
-            key={ind.id} indicator={ind} value={input.value || ''}
+            key={ind.id} indicator={ind} value={String(input.value ?? '')}
             onChange={(val) => updateIndicatorInput(ind.id, { ...input, value: val })}
             isApplicable={input.isApplicable !== false}
             onApplicableChange={(c) => updateIndicatorInput(ind.id, { ...input, isApplicable: c })}
@@ -133,7 +134,7 @@ const Step2 = () => {
   const { message } = AntApp.useApp();
   const [activeTab, setActiveTab] = useState(0);
   const [showInputWarning, setShowInputWarning] = useState(false);
-  const categories = indicatorData.categories;
+  const categories = indicatorData.categories as unknown as CategoryDefinition[];
   const hasEvaluationInput = Object.values(indicatorInputs).some((input) =>
     input.isApplicable === false ||
     input.selectedLevel !== undefined ||

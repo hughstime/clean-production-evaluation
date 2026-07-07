@@ -58,6 +58,11 @@ const Step3 = () => {
   }
 
   const isPassed = result.level !== '未达标';
+  const levelScores = result.levelScores ?? {
+    totalScoreL1: result.levelScore,
+    totalScoreL2: result.levelScore,
+    totalScoreL3: result.levelScore,
+  };
 
   return (
     <div>
@@ -89,9 +94,9 @@ const Step3 = () => {
       {/* 三个指数卡片 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
         {[
-          { label: 'Ⅰ级综合指数', score: result.levelScore, threshold: 85, pass: result.isRestrictivePassL1 && result.levelScore >= 85, color: '#22c55e' },
-          { label: 'Ⅱ级综合指数', score: result.levelScore, threshold: 85, pass: result.isRestrictivePassL2 && result.levelScore >= 85, color: '#3b82f6' },
-          { label: 'Ⅲ级综合指数', score: result.levelScore, threshold: 100, pass: result.isRestrictivePassL3, color: '#f59e0b' },
+          { label: 'Ⅰ级综合指数', score: levelScores.totalScoreL1, threshold: 85, pass: result.isRestrictivePassL1 && levelScores.totalScoreL1 >= 85, color: '#22c55e' },
+          { label: 'Ⅱ级综合指数', score: levelScores.totalScoreL2, threshold: 85, pass: result.isRestrictivePassL2 && levelScores.totalScoreL2 >= 85, color: '#3b82f6' },
+          { label: 'Ⅲ级综合指数', score: levelScores.totalScoreL3, threshold: 100, pass: result.isRestrictivePassL3 && levelScores.totalScoreL3 === 100, color: '#f59e0b' },
         ].map((c, i) => (
           <div key={i} className="result-card" style={{ padding: 20 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: c.color, marginBottom: 12 }}>{c.label}</div>

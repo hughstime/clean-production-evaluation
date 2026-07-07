@@ -1,4 +1,7 @@
-import { IndicatorInput, IndicatorDefinition, ScoreResult, LevelScores, EvaluationResult, RestrictiveCheck, ImprovementSuggestion } from '../types';
+import { IndicatorInput, IndicatorDefinition, CategoryDefinition, Benchmark, ScoreResult, LevelScores, EvaluationResult, RestrictiveCheck, ImprovementSuggestion } from '../types';
+
+type BenchmarkDirection = 'lower' | 'higher';
+type BenchmarkOperator = '<' | '<=' | '>' | '>=';
 
 export class EvaluationEngine {
 
@@ -7,7 +10,7 @@ export class EvaluationEngine {
    */
   calculateMembershipScore(
     value: string | number,
-    benchmark: any,
+    benchmark: Benchmark,
     type: 'qualitative' | 'quantitative'
   ): { scoreL1: number; scoreL2: number; scoreL3: number } {
 
@@ -16,30 +19,22 @@ export class EvaluationEngine {
     let scoreL3 = 0;
 
     if (type === 'qualitative') {
-      // 定性指标：根据选择等级直接赋值
+      // 定性指标：高等级同时满足低等级的评价要求
       const selectedLevel = value as number;
-      if (selectedLevel === 1) scoreL1 = 100;
-      else if (selectedLevel === 2) scoreL2 = 100;
-      else if (selectedLevel === 3) scoreL3 = 100;
-    } else {
-      // 定量指标：根据数值与基准值的关系判定等级
-      const numValue = Number(value);
-      const level1Value = this.parseBenchmarkValue(benchmark.level1);
-      const level2Value = this.parseBenchmarkValue(benchmark.level2);
-      const level3Value = this.parseBenchmarkValue(benchmark.level3);
-
-      // 根据指标性质（越小越好或越大越好）进行判断
-      if (this.isLowerBetterIndicator(benchmark.level1)) {
-        // 越小越好指标（如能耗、排放）
-        if (numValue <= level1Value) scoreL1 = 100;
-        else if (numValue <= level2Value) scoreL2 = 100;
-        else if (numValue <= level3Value) scoreL3 = 100;
-      } else {
-        // 越大越好指标（如运行时间、利用率）
-        if (numValue >= level1Value) scoreL1 = 100;
-        else if (numValue >= level2Value) scoreL2 = 100;
-        else if (numValue >= level3Value) scoreL3 = 100;
+      if (selectedLevel === 1) {
+        scoreL1 = 100; scoreL2 = 100; scoreL3 = 100;
+      } else if (selectedLevel === 2) {
+        scoreL2 = 100; scoreL3 = 100;
+      } else if (selectedLevel === 3) {
+        scoreL3 = 100;
       }
+    } else {
+      // 定量指标：分别判断是否满足 I/II/III 级基准
+      const numValue = Number(value);
+      const direction = this.getBenchmarkDirection(benchmark.level1);
+      if (this.passesBenchmark(numValue, benchmark.level1, direction)) scoreL1 = 100;
+      if (this.passesBenchmark(numValue, benchmark.level2, direction)) scoreL2 = 100;
+      if (this.passesBenchmark(numValue, benchmark.level3, direction)) scoreL3 = 100;
     }
 
     return { scoreL1, scoreL2, scoreL3 };
@@ -51,19 +46,90 @@ export class EvaluationEngine {
   private parseBenchmarkValue(value: string | number | { description: string; value: number }): number {
     if (typeof value === 'number') return value;
     if (typeof value === 'object') return value.value;
-    // 处理字符串中的特殊符号（如">70%"，"<25%"）
-    const str = String(value).replace(/[<>%]/g, '');
-    return parseFloat(str);
+    return this.parseBenchmarkLimit(value, this.getBenchmarkDirection(value)).value;
   }
 
   /**
-   * 判断是否为"越小越好"指标
+   * 判断定量指标方向：越小越好或越大越好
    */
-  private isLowerBetterIndicator(level1Benchmark: any): boolean {
+  private getBenchmarkDirection(level1Benchmark: Benchmark['level1']): BenchmarkDirection {
     const level1Str = String(level1Benchmark).toLowerCase();
-    return level1Str.includes('≤') || level1Str.includes('<') ||
-           level1Str.includes('≤') ||
-           ['能耗', '消耗', '排放', '浓度', '次数', '产出率'].some(keyword => level1Str.includes(keyword));
+    if (level1Str.includes('≤') || level1Str.includes('<=') || level1Str.includes('<')) {
+      return 'lower';
+    }
+    if (level1Str.includes('≥') || level1Str.includes('>=') || level1Str.includes('>')) {
+      return 'higher';
+    }
+
+    return ['能耗', '消耗', '排放', '浓度', '次数', '产出率'].some(keyword => level1Str.includes(keyword))
+      ? 'lower'
+      : 'higher';
+  }
+
+  private parseBenchmarkLimit(
+    value: string | number | { description: string; value: number },
+    direction: BenchmarkDirection
+  ): { value: number; operator: BenchmarkOperator } {
+    if (typeof value === 'number') {
+      return { value, operator: direction === 'lower' ? '<=' : '>=' };
+    }
+    if (typeof value === 'object') {
+      return { value: value.value, operator: direction === 'lower' ? '<=' : '>=' };
+    }
+
+    const str = String(value).replace(/,/g, '').replace(/％/g, '%').trim();
+    const range = str.match(/(-?\d+(?:\.\d+)?)\s*[-－—–~～]\s*(-?\d+(?:\.\d+)?)/);
+    if (range) {
+      const first = Number(range[1]);
+      const second = Number(range[2]);
+      return {
+        value: direction === 'lower' ? Math.max(first, second) : Math.min(first, second),
+        operator: direction === 'lower' ? '<=' : '>=',
+      };
+    }
+
+    const match = str.match(/-?\d+(?:\.\d+)?/);
+    const parsedValue = match ? Number(match[0]) : Number.NaN;
+
+    if (str.includes('≤') || str.includes('<=')) return { value: parsedValue, operator: '<=' };
+    if (str.includes('<')) return { value: parsedValue, operator: '<' };
+    if (str.includes('≥') || str.includes('>=')) return { value: parsedValue, operator: '>=' };
+    if (str.includes('>')) return { value: parsedValue, operator: '>' };
+
+    return { value: parsedValue, operator: direction === 'lower' ? '<=' : '>=' };
+  }
+
+  private passesBenchmark(
+    numValue: number,
+    benchmark: string | number | { description: string; value: number },
+    direction: BenchmarkDirection
+  ): boolean {
+    const { value, operator } = this.parseBenchmarkLimit(benchmark, direction);
+    if (!Number.isFinite(numValue) || !Number.isFinite(value)) return false;
+
+    switch (operator) {
+      case '<': return numValue < value;
+      case '<=': return numValue <= value;
+      case '>': return numValue > value;
+      case '>=': return numValue >= value;
+    }
+  }
+
+  private getIndicatorInputValue(indicator: IndicatorDefinition, input: IndicatorInput): string | number | undefined {
+    return indicator.type === 'qualitative' ? (input.selectedLevel ?? input.value) : input.value;
+  }
+
+  private hasAnsweredIndicator(indicator: IndicatorDefinition, input?: IndicatorInput): input is IndicatorInput {
+    if (!input || input.isApplicable === false) return false;
+    const value = this.getIndicatorInputValue(indicator, input);
+    return value !== undefined && value !== null && String(value).trim() !== '';
+  }
+
+  private hasScorableBenchmark(indicator: IndicatorDefinition): boolean {
+    if (indicator.type === 'qualitative') return true;
+    const direction = this.getBenchmarkDirection(indicator.benchmarks.level1);
+    return [indicator.benchmarks.level1, indicator.benchmarks.level2, indicator.benchmarks.level3]
+      .every((benchmark) => Number.isFinite(this.parseBenchmarkLimit(benchmark, direction).value));
   }
 
   /**
@@ -72,7 +138,7 @@ export class EvaluationEngine {
   calculateTotalScore(
     indicatorInputs: Record<string, IndicatorInput>,
     categoryWeights: Record<string, number>,
-    indicators: IndicatorDefinition[]
+    indicators: CategoryDefinition[]
   ): LevelScores {
 
     let totalScoreL1 = 0;
@@ -82,8 +148,8 @@ export class EvaluationEngine {
 
     // 计算每个类别的得分
     Object.entries(categoryWeights).forEach(([categoryId, categoryWeight]) => {
-      const cat = indicators.find((c: any) => c.id === categoryId);
-      const categoryIndicators = (cat as any)?.indicators || [];
+      const cat = indicators.find((c) => c.id === categoryId);
+      const categoryIndicators = cat?.indicators || [];
       let categoryScoreL1 = 0;
       let categoryScoreL2 = 0;
       let categoryScoreL3 = 0;
@@ -92,21 +158,15 @@ export class EvaluationEngine {
       // 计算类别内各指标的加权得分
       categoryIndicators.forEach(indicator => {
         const input = indicatorInputs[indicator.id];
-        if (input && input.isApplicable) {
+        if (this.hasScorableBenchmark(indicator) && this.hasAnsweredIndicator(indicator, input)) {
           // 定性指标用selectedLevel，定量指标用value
-          const inputValue = indicator.type === 'qualitative' ? (input.selectedLevel || input.value) : input.value;
+          const inputValue = this.getIndicatorInputValue(indicator, input)!;
           const scores = this.calculateMembershipScore(inputValue, indicator.benchmarks, indicator.type);
 
           // 如果用户选择了特定等级，使用该等级的得分
-          let weightedScoreL1 = scores.scoreL1 * indicator.weight;
-          let weightedScoreL2 = scores.scoreL2 * indicator.weight;
-          let weightedScoreL3 = scores.scoreL3 * indicator.weight;
-
-          if (input.selectedLevel) {
-            if (input.selectedLevel === 1) weightedScoreL1 = 100 * indicator.weight;
-            else if (input.selectedLevel === 2) weightedScoreL2 = 100 * indicator.weight;
-            else if (input.selectedLevel === 3) weightedScoreL3 = 100 * indicator.weight;
-          }
+          const weightedScoreL1 = scores.scoreL1 * indicator.weight;
+          const weightedScoreL2 = scores.scoreL2 * indicator.weight;
+          const weightedScoreL3 = scores.scoreL3 * indicator.weight;
 
           categoryScoreL1 += weightedScoreL1;
           categoryScoreL2 += weightedScoreL2;
@@ -125,10 +185,12 @@ export class EvaluationEngine {
       }
     });
 
+    const capScore = (score: number) => Math.min(score, 100);
+
     return {
-      totalScoreL1: totalValidWeight > 0 ? totalScoreL1 : 0,
-      totalScoreL2: totalValidWeight > 0 ? totalScoreL2 : 0,
-      totalScoreL3: totalValidWeight > 0 ? totalScoreL3 : 0
+      totalScoreL1: totalValidWeight > 0 ? capScore(totalScoreL1) : 0,
+      totalScoreL2: totalValidWeight > 0 ? capScore(totalScoreL2) : 0,
+      totalScoreL3: totalValidWeight > 0 ? capScore(totalScoreL3) : 0
     };
   }
 
@@ -137,24 +199,21 @@ export class EvaluationEngine {
    */
   checkRestrictiveIndicators(
     indicatorInputs: Record<string, IndicatorInput>,
-    indicators: IndicatorDefinition[]
+    indicators: CategoryDefinition[]
   ): RestrictiveCheck[] {
-    return indicators.flatMap((category: any) =>
-      (category.indicators || [])
-        .filter((indicator: any) => indicator.isRestrictive)
+    return indicators.flatMap((category) =>
+      category.indicators
+        .filter((indicator) => indicator.isRestrictive && this.hasScorableBenchmark(indicator))
         .map(indicator => {
           const input = indicatorInputs[indicator.id];
-          const level1Value = this.parseBenchmarkValue(indicator.benchmarks.level1);
-          const level2Value = this.parseBenchmarkValue(indicator.benchmarks.level2);
-          const level3Value = this.parseBenchmarkValue(indicator.benchmarks.level3);
-          const inputValue = Number(input?.value || 0);
+          const inputValue = this.hasAnsweredIndicator(indicator, input)
+            ? Number(this.getIndicatorInputValue(indicator, input))
+            : Number.NaN;
 
-          // 根据指标类型判断是否达标
-          const isLowerBetter = this.isLowerBetterIndicator(indicator.benchmarks.level1);
-
-          const isPassL1 = isLowerBetter ? inputValue <= level1Value : inputValue >= level1Value;
-          const isPassL2 = isLowerBetter ? inputValue <= level2Value : inputValue >= level2Value;
-          const isPassL3 = isLowerBetter ? inputValue <= level3Value : inputValue >= level3Value;
+          const direction = this.getBenchmarkDirection(indicator.benchmarks.level1);
+          const isPassL1 = this.passesBenchmark(inputValue, indicator.benchmarks.level1, direction);
+          const isPassL2 = this.passesBenchmark(inputValue, indicator.benchmarks.level2, direction);
+          const isPassL3 = this.passesBenchmark(inputValue, indicator.benchmarks.level3, direction);
 
           return {
             indicatorId: indicator.id,
@@ -204,22 +263,23 @@ export class EvaluationEngine {
    */
   generateImprovementSuggestions(
     categoryScores: Record<string, ScoreResult>,
-    indicators: IndicatorDefinition[],
+    indicators: CategoryDefinition[],
     indicatorInputs: Record<string, IndicatorInput>
   ): ImprovementSuggestion[] {
     const suggestions: ImprovementSuggestion[] = [];
 
     // 按类别分析低分项
     Object.entries(categoryScores).forEach(([categoryId, score]) => {
-      const category = indicators.find((cat: any) => cat.id === categoryId) as any;
+      const category = indicators.find((cat) => cat.id === categoryId);
       if (!category || !category.indicators || score.scoreL1 >= 70) return; // 得分70分以上不提建议
 
       const lowScoreIndicators = category.indicators
         .map(indicator => {
           const input = indicatorInputs[indicator.id];
-          if (!input || !input.isApplicable) return null;
+          if (!this.hasScorableBenchmark(indicator) || !this.hasAnsweredIndicator(indicator, input)) return null;
 
-          const scores = this.calculateMembershipScore(input.value, indicator.benchmarks, indicator.type);
+          const inputValue = this.getIndicatorInputValue(indicator, input)!;
+          const scores = this.calculateMembershipScore(inputValue, indicator.benchmarks, indicator.type);
           const maxScore = Math.max(scores.scoreL1, scores.scoreL2, scores.scoreL3);
           const gap = 100 - maxScore;
 
@@ -228,7 +288,7 @@ export class EvaluationEngine {
               name: indicator.name,
               score: maxScore,
               gap,
-              suggestion: this.generateSuggestion(indicator, input.value, maxScore)
+              suggestion: this.generateSuggestion(indicator, inputValue)
             };
           }
           return null;
@@ -255,19 +315,18 @@ export class EvaluationEngine {
   /**
    * 生成单个指标的建议
    */
-  private generateSuggestion(indicator: IndicatorDefinition, value: string | number, score: number): string {
+  private generateSuggestion(indicator: IndicatorDefinition, value: string | number): string {
     const indicatorName = indicator.name;
 
     if (indicator.type === 'qualitative') {
-      const desc = typeof indicator.benchmarks.level1 === 'object' ? (indicator.benchmarks.level1 as any).description : indicator.benchmarks.level1;
+      const desc = typeof indicator.benchmarks.level1 === 'object' ? indicator.benchmarks.level1.description : indicator.benchmarks.level1;
       return `建议提升至更高水平的${indicatorName}，以达到清洁生产先进水平。参考Ⅰ级标准：${desc}`;
     } else {
       const numValue = Number(value);
       const level1Value = this.parseBenchmarkValue(indicator.benchmarks.level1);
       const level2Value = this.parseBenchmarkValue(indicator.benchmarks.level2);
-      const level3Value = this.parseBenchmarkValue(indicator.benchmarks.level3);
 
-      if (this.isLowerBetterIndicator(indicator.benchmarks.level1)) {
+      if (this.getBenchmarkDirection(indicator.benchmarks.level1) === 'lower') {
         // 越小越好指标
         if (numValue > level1Value) {
           return `${indicatorName}偏高，建议通过工艺优化、设备升级或加强管理措施来降低，目标值应≤${level1Value}${indicator.unit}`;
@@ -292,15 +351,13 @@ export class EvaluationEngine {
    */
   evaluate(
     indicatorInputs: Record<string, IndicatorInput>,
-    indicators: IndicatorDefinition[]
+    indicators: CategoryDefinition[]
   ): EvaluationResult {
     // 获取类别权重
     const categoryWeights: Record<string, number> = {};
     indicators.forEach(category => {
-      // 资源循环利用是加分项，不纳入基本权重
-      if (!category.isBonus) {
-        categoryWeights[category.id] = category.weight;
-      }
+      // 资源循环利用是加分项，按草案额外0.1权重计入，最终综合指数封顶100。
+      categoryWeights[category.id] = category.weight;
     });
 
     // 计算综合得分
@@ -314,29 +371,34 @@ export class EvaluationEngine {
 
     // 计算各分类得分（用于可视化）
     const categoryScores: Record<string, ScoreResult> = {};
-    indicators.forEach((category: any) => {
+    indicators.forEach((category) => {
       const catIndicators = category.indicators || [];
+      let categoryScoreL1 = 0;
+      let categoryScoreL2 = 0;
+      let categoryScoreL3 = 0;
+      let categoryValidWeight = 0;
+
       if (catIndicators.length === 0) {
         categoryScores[category.id] = { scoreL1: 0, scoreL2: 0, scoreL3: 0 };
         return;
       }
-      const categoryIndicators = catIndicators.map((indicator: any) => {
+
+      catIndicators.forEach((indicator) => {
         const input = indicatorInputs[indicator.id];
-        if (input && input.isApplicable) {
-          const inputValue = indicator.type === 'qualitative' ? (input.selectedLevel || input.value) : input.value;
-          return this.calculateMembershipScore(inputValue, indicator.benchmarks, indicator.type);
+        if (this.hasScorableBenchmark(indicator) && this.hasAnsweredIndicator(indicator, input)) {
+          const inputValue = this.getIndicatorInputValue(indicator, input)!;
+          const scores = this.calculateMembershipScore(inputValue, indicator.benchmarks, indicator.type);
+          categoryScoreL1 += scores.scoreL1 * indicator.weight;
+          categoryScoreL2 += scores.scoreL2 * indicator.weight;
+          categoryScoreL3 += scores.scoreL3 * indicator.weight;
+          categoryValidWeight += indicator.weight;
         }
-        return { scoreL1: 0, scoreL2: 0, scoreL3: 0 };
       });
 
-      const avgScoreL1 = categoryIndicators.reduce((sum: number, s: any) => sum + s.scoreL1, 0) / categoryIndicators.length;
-      const avgScoreL2 = categoryIndicators.reduce((sum: number, s: any) => sum + s.scoreL2, 0) / categoryIndicators.length;
-      const avgScoreL3 = categoryIndicators.reduce((sum: number, s: any) => sum + s.scoreL3, 0) / categoryIndicators.length;
-
       categoryScores[category.id] = {
-        scoreL1: avgScoreL1,
-        scoreL2: avgScoreL2,
-        scoreL3: avgScoreL3
+        scoreL1: categoryValidWeight > 0 ? categoryScoreL1 / categoryValidWeight : 0,
+        scoreL2: categoryValidWeight > 0 ? categoryScoreL2 / categoryValidWeight : 0,
+        scoreL3: categoryValidWeight > 0 ? categoryScoreL3 / categoryValidWeight : 0,
       };
     });
 
@@ -344,7 +406,7 @@ export class EvaluationEngine {
     const suggestions = this.generateImprovementSuggestions(categoryScores, indicators, indicatorInputs);
 
     // 获得最终得分（根据等级）
-    let levelScore = 0;
+    let levelScore = Math.max(scores.totalScoreL1, scores.totalScoreL2, scores.totalScoreL3);
     if (level === 'Ⅰ级') levelScore = scores.totalScoreL1;
     else if (level === 'Ⅱ级') levelScore = scores.totalScoreL2;
     else if (level === 'Ⅲ级') levelScore = scores.totalScoreL3;
@@ -352,6 +414,7 @@ export class EvaluationEngine {
     return {
       level,
       levelScore,
+      levelScores: scores,
       isRestrictivePassL1: restrictiveChecks.every(check => check.isPassL1),
       isRestrictivePassL2: restrictiveChecks.every(check => check.isPassL2),
       isRestrictivePassL3: restrictiveChecks.every(check => check.isPassL3),

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Button, Space, message, Card } from 'antd';
 import { useStore } from '../store';
+import { StepType } from '../types';
 import { mockEnterpriseInfo, mockIndicatorInputs, fillMockData } from '../utils/mockData';
 import { ArrowRightOutlined } from '@ant-design/icons';
 
@@ -34,8 +35,8 @@ const TestPage = () => {
   }, [setEnterpriseInfo, updateIndicatorInput]);
 
   // 快速跳转函数
-  const goToStep = (step: number) => {
-    setStep(step as any);
+  const goToStep = (step: StepType) => {
+    setStep(step);
     message.info(`已跳转到第${step}步`);
   };
 

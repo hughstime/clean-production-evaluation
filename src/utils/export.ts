@@ -1,6 +1,10 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { EnterpriseInfo, EvaluationResult, ExportData } from '../types';
+import { EnterpriseInfo, EvaluationResult, ExportData, IndicatorInput } from '../types';
+
+type IndicatorInputForValidation = IndicatorInput & {
+  type?: 'qualitative' | 'quantitative';
+};
 
 /**
  * 生成PDF报告的类
@@ -44,8 +48,6 @@ export class ReportExporter {
         let position = 0;
 
         while (remainingHeight > 0) {
-          const pageHeight = Math.min(pdf.internal.pageSize.getHeight(), remainingHeight);
-
           if (position > 0) {
             pdf.addPage();
           }
@@ -309,7 +311,7 @@ export class DataValidator {
   /**
    * 验证指标输入数据
    */
-  static validateIndicatorInputs(indicatorInputs: Record<string, any>): { isValid: boolean; errors: string[] } {
+  static validateIndicatorInputs(indicatorInputs: Record<string, IndicatorInputForValidation>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     Object.entries(indicatorInputs).forEach(([indicatorId, input]) => {
