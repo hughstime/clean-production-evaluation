@@ -22,11 +22,24 @@ const Step4 = () => {
   const handlePDF = async () => {
     if (!reportRef.current) return;
     try {
-      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       const pdf = new jsPDF('p', 'mm', 'a4');
       const w = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
       const h = (canvas.height * w) / canvas.width;
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+      const imgData = canvas.toDataURL('image/png');
+      let y = 0;
+      let remainingHeight = h;
+
+      while (remainingHeight > 0) {
+        pdf.addImage(imgData, 'PNG', 0, y, w, h);
+        remainingHeight -= pageHeight;
+        if (remainingHeight > 0) {
+          pdf.addPage();
+          y -= pageHeight;
+        }
+      }
+
       pdf.save(`清洁生产评价报告_${enterpriseInfo?.name}.pdf`);
       message.success('报告导出成功');
     } catch { message.error('导出失败'); }
@@ -37,6 +50,11 @@ const Step4 = () => {
   }
 
   const levelColor = (l: string) => l === 'Ⅰ级' ? '#22c55e' : l === 'Ⅱ级' ? '#3b82f6' : l === 'Ⅲ级' ? '#f59e0b' : '#ef4444';
+  const levelScores = evaluationResult.levelScores ?? {
+    totalScoreL1: evaluationResult.levelScore,
+    totalScoreL2: evaluationResult.levelScore,
+    totalScoreL3: evaluationResult.levelScore,
+  };
 
   return (
     <div>
@@ -93,26 +111,69 @@ const Step4 = () => {
           </div>
         </div>
 
+        {/* 各级综合指数 */}
+        <div className="result-card" style={{ marginBottom: 20 }}>
+          <h4 style={{ color: '#CA933E', margin: '0 0 16px', fontSize: 16 }}>各级综合指数</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            {[
+              { label: 'Ⅰ级综合指数', score: levelScores.totalScoreL1, color: '#22c55e' },
+              { label: 'Ⅱ级综合指数', score: levelScores.totalScoreL2, color: '#3b82f6' },
+              { label: 'Ⅲ级综合指数', score: levelScores.totalScoreL3, color: '#f59e0b' },
+            ].map((item) => (
+              <div key={item.label} style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: item.color, marginBottom: 8 }}>{item.label}</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: '#0D2339' }}>{item.score.toFixed(1)}</div>
+                <div style={{ height: 5, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden', marginTop: 10 }}>
+                  <div style={{ height: '100%', width: `${Math.min(item.score, 100)}%`, background: item.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 分项得分 */}
         <div className="result-card" style={{ marginBottom: 20 }}>
-          <h4 style={{ color: '#CA933E', margin: '0 0 16px', fontSize: 16 }}>分项得分</h4>
+          <h4 style={{ color: '#CA933E', margin: '0 0 16px', fontSize: 16 }}>各一级指标评价详情</h4>
           <table className="score-table">
-            <thead><tr><th style={{ textAlign: 'left' }}>评价类别</th><th>权重</th><th>得分</th><th>类型</th></tr></thead>
+            <thead><tr><th style={{ textAlign: 'left' }}>一级指标</th><th>权重</th><th>Ⅰ级得分</th><th>Ⅱ级得分</th><th>Ⅲ级得分</th><th>类型</th></tr></thead>
             <tbody>
               {KEYS.map((k, i) => {
                 const s = evaluationResult.categoryScores[k];
-                const max = s ? Math.max(s.scoreL1, s.scoreL2, s.scoreL3) : 0;
+                const s1 = s?.scoreL1 || 0, s2 = s?.scoreL2 || 0, s3 = s?.scoreL3 || 0;
                 return (
                   <tr key={k}>
                     <td><strong>{NAMES[i]}</strong></td>
                     <td>{WEIGHTS[i]}</td>
-                    <td><strong>{max.toFixed(1)}</strong></td>
+                    <td className="score-green">{s1.toFixed(1)}</td>
+                    <td className="score-blue">{s2.toFixed(1)}</td>
+                    <td className="score-orange">{s3.toFixed(1)}</td>
                     <td><span className={`type-badge ${i === 7 ? 'bonus' : ''}`}>{i === 7 ? '加分项' : '常规'}</span></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* 限定性指标检查 */}
+        <div className="result-card" style={{ marginBottom: 20 }}>
+          <div className="restrictive-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CA933E" strokeWidth="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            限定性指标检查结果
+          </div>
+          {evaluationResult.restrictiveChecks.length === 0 ? (
+            <p style={{ color: '#9ca3af', padding: 16 }}>暂无限定性指标数据</p>
+          ) : evaluationResult.restrictiveChecks.map(c => (
+            <div key={c.indicatorId} className="restrictive-item">
+              <span className="restrictive-badge">限定</span>
+              <span className="restrictive-name">{c.indicatorName}</span>
+              <div className="restrictive-levels">
+                <span className={`level-check ${c.isPassL1 ? 'pass' : 'fail'}`}>{c.isPassL1 ? '✔' : '✘'} Ⅰ级</span>
+                <span className={`level-check ${c.isPassL2 ? 'pass' : 'fail'}`}>{c.isPassL2 ? '✔' : '✘'} Ⅱ级</span>
+                <span className={`level-check ${c.isPassL3 ? 'pass' : 'fail'}`}>{c.isPassL3 ? '✔' : '✘'} Ⅲ级</span>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* 说明 */}
