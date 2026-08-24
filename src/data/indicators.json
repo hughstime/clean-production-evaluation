@@ -155,7 +155,7 @@
           "isBonus": false,
           "benchmarks": {
             "level1": {
-              "description": "具备智能焚烧系统的同时配备自动配物系统",
+              "description": "具备智能焚烧系统的同时配备智能配伍系统",
               "value": 1
             },
             "level2": {
@@ -172,14 +172,23 @@
           "id": "energy_efficient_product_ratio",
           "name": "一级能效产品比例",
           "weight": 0.1,
-          "type": "quantitative",
+          "type": "qualitative",
           "unit": "",
           "isRestrictive": false,
           "isBonus": false,
           "benchmarks": {
-            "level1": "电机、变压器、水泵、风机、空压机等通用设备采用一级能效产品比例≥90%",
-            "level2": "电机、变压器、水泵、风机、空压机等通用设备采用一级能效产品比例≥80%",
-            "level3": "电机、变压器、水泵、风机、空压机等通用设备采用一级能效产品比例≥70%"
+            "level1": {
+              "description": "电机、变压器、水泵、风机、空压机等通用设备采用一级能效产品比例≥90%",
+              "value": 1
+            },
+            "level2": {
+              "description": "电机、变压器、水泵、风机、空压机等通用设备采用一级能效产品比例≥80%",
+              "value": 2
+            },
+            "level3": {
+              "description": "电机、变压器、水泵、风机、空压机等通用设备采用一级能效产品比例≥70%",
+              "value": 3
+            }
           }
         }
       ]
@@ -198,6 +207,8 @@
           "unit": "kgce/t",
           "isRestrictive": false,
           "isBonus": false,
+          "computed": true,
+          "computation": "energy",
           "benchmarks": {
             "level1": "≤30",
             "level2": "≤40",
@@ -395,9 +406,11 @@
           "name": "吨危废二氧化碳排放量",
           "weight": 1.0,
           "type": "quantitative",
-          "unit": "",
+          "unit": "tCO₂/t",
           "isRestrictive": false,
           "isBonus": false,
+          "computed": true,
+          "computation": "carbon",
           "benchmarks": {
             "level1": "",
             "level2": "",
@@ -494,28 +507,46 @@
           "id": "fly_ash_utilization",
           "name": "飞灰资源化利用",
           "weight": 0.4,
-          "type": "quantitative",
+          "type": "qualitative",
           "unit": "%",
           "isRestrictive": false,
           "isBonus": true,
           "benchmarks": {
-            "level1": "开展飞灰资源化利用且利用率>70%",
-            "level2": "开展飞灰资源化利用且利用率>50%",
-            "level3": "开展飞灰资源化利用且利用率>30%"
+            "level1": {
+              "description": "开展飞灰资源化利用且利用率>70%",
+              "value": 1
+            },
+            "level2": {
+              "description": "开展飞灰资源化利用且利用率>50%",
+              "value": 2
+            },
+            "level3": {
+              "description": "开展飞灰资源化利用且利用率>30%",
+              "value": 3
+            }
           }
         },
         {
           "id": "bottom_ash_utilization",
           "name": "炉渣资源化利用",
           "weight": 0.4,
-          "type": "quantitative",
+          "type": "qualitative",
           "unit": "%",
           "isRestrictive": false,
           "isBonus": true,
           "benchmarks": {
-            "level1": "开展炉渣资源化利用且利用率>60%",
-            "level2": "开展炉渣资源化利用且利用率>40%",
-            "level3": "开展炉渣资源化利用且利用率>20%"
+            "level1": {
+              "description": "开展炉渣资源化利用且利用率>60%",
+              "value": 1
+            },
+            "level2": {
+              "description": "开展炉渣资源化利用且利用率>40%",
+              "value": 2
+            },
+            "level3": {
+              "description": "开展炉渣资源化利用且利用率>20%",
+              "value": 3
+            }
           }
         }
       ]

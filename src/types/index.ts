@@ -29,6 +29,10 @@ export interface IndicatorDefinition {
   isBonus: boolean;
   benchmarks: Benchmark;
   formula?: string;
+  /** 是否由实物量自动计算的指标 */
+  computed?: boolean;
+  /** 计算类型：energy=吨入厂危废综合能耗 carbon=吨危废二氧化碳排放量 */
+  computation?: 'energy' | 'carbon';
 }
 
 // 指标类别定义类型
@@ -47,6 +51,8 @@ export interface IndicatorInput {
   value: string | number;
   selectedLevel?: number; // 1=I级, 2=II级, 3=III级
   isApplicable: boolean; // 是否适用
+  /** 计算型指标的实物量子输入（年入厂危废/原煤/天然气/柴油/电力/热力） */
+  subValues?: Record<string, string>;
 }
 
 // 评价得分结果类型

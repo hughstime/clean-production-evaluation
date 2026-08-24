@@ -3,6 +3,7 @@ import { App as AntApp, Checkbox } from 'antd';
 import { useStore } from '../store';
 import { CategoryDefinition, IndicatorDefinition, IndicatorInput } from '../types';
 import indicatorData from '../data/indicators.json';
+import { calcEnergyAndCarbon, computedValueFor, ENERGY_INPUT_FIELDS, SubValues } from '../utils/energy';
 
 // Tab图标（每个类别的小图标）
 const TAB_ICONS: Record<string, string> = {
@@ -93,6 +94,144 @@ const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApp
   </div>
 );
 
+// 计算型指标（能源消耗/温室气体排放：实物量填报 + 系统自动折算）
+const ENERGY_SOURCE_ID = 'waste_specific_energy';
+
+const ComputedIndicator = ({ indicator }: { indicator: IndicatorDefinition }) => {
+  const { indicatorInputs, updateIndicatorInput } = useStore();
+  const isEnergy = indicator.computation === 'energy';
+  const sourceInput = indicatorInputs[ENERGY_SOURCE_ID];
+  const subValues = (sourceInput?.subValues ?? {}) as SubValues;
+  const result = calcEnergyAndCarbon(subValues);
+  const input: IndicatorInput = indicatorInputs[indicator.id] ?? { id: indicator.id, value: '', isApplicable: true };
+  const isApplicable = input.isApplicable !== false;
+
+  const handleSubChange = (key: string, v: string) => {
+    updateIndicatorInput(ENERGY_SOURCE_ID, {
+      ...(sourceInput ?? { id: ENERGY_SOURCE_ID, value: '', isApplicable: true }),
+      subValues: { ...subValues, [key]: v },
+    });
+  };
+
+  const fmt = (n: number) => n.toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+  const fmt3 = (n: number) => n.toLocaleString('zh-CN', { maximumFractionDigits: 3 });
+
+  const label = ENERGY_INPUT_FIELDS.find((f) => f.key === 'annual_waste')!.label;
+
+  return (
+    <div className="indicator-card">
+      <div className="indicator-card-header">
+        <div>
+          <div className="indicator-name">{indicator.name}
+            <span style={{ color: '#CA933E', marginLeft: 6, fontSize: 12 }}>⚙ 系统自动计算</span>
+          </div>
+          <div className="indicator-meta">
+            {indicator.unit && <>单位: <span className="weight-label">{indicator.unit}</span>&nbsp;&nbsp;</>}
+            权重: <span className="weight-label">{indicator.weight}</span>
+            {isEnergy && (
+              <span className="benchmark-link" title="按一般烟煤0.6373、天然气1.2143 kgce/Nm³、柴油1.4571、电力等价2.8498 tce/万kWh、热力0.0341 tce/百万kJ折标">
+                ⓘ 折标系数
+              </span>
+            )}
+          </div>
+        </div>
+        <label className="na-checkbox">
+          <Checkbox
+            checked={!isApplicable}
+            onChange={(e) => updateIndicatorInput(indicator.id, { ...input, isApplicable: !e.target.checked })}
+          />
+          不适用
+        </label>
+      </div>
+
+      {isApplicable && (
+        <>
+          {isEnergy && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12, marginTop: 12 }}>
+              {ENERGY_INPUT_FIELDS.map((f) => (
+                <label key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, color: '#374151' }}>
+                  <span>{f.label}（{f.unit}）</span>
+                  <input
+                    type="number"
+                    className="quant-input"
+                    style={{ width: '100%' }}
+                    value={subValues[f.key] ?? ''}
+                    onChange={(e) => handleSubChange(f.key, e.target.value)}
+                    placeholder="请输入"
+                    min="0"
+                  />
+                </label>
+              ))}
+            </div>
+          )}
+
+          {!isEnergy && (
+            <div style={{ marginTop: 10, fontSize: 13, color: '#6b7280' }}>
+              依据「能源消耗」中填报的实物量自动折算，无需重复填写。
+            </div>
+          )}
+
+          <div style={{ marginTop: 14, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#374151' }}>
+            <div style={{ fontWeight: 600, marginBottom: 6, color: '#0D2339' }}>自动计算结果</div>
+
+            {isEnergy ? (
+              <>
+                <div>等价综合能耗：<b>{result.hasAnyEnergyInput ? `${fmt(result.totalEnergyTce)} 吨标准煤` : '—'}</b></div>
+                <div style={{ marginTop: 4 }}>
+                  吨入厂危废综合能耗：
+                  <b style={{ color: result.energyPerWaste !== null && result.energyPerWaste <= 30 ? '#059669' : '#b45309' }}>
+                    {result.energyPerWaste !== null ? `${result.energyPerWaste.toFixed(2)} kgce/t` : '—'}
+                  </b>
+                  {result.energyPerWaste === null && result.hasAnyEnergyInput && (
+                    <span style={{ color: '#9ca3af' }}>（请在上方填写「{label}」）</span>
+                  )}
+                </div>
+                <div style={{ marginTop: 4, color: '#6b7280', fontSize: 12 }}>
+                  基准值：Ⅰ级 ≤30 · Ⅱ级 ≤40 · Ⅲ级 ≤50（kgce/t）
+                </div>
+              </>
+            ) : (
+              <>
+                {result.hasAnyEnergyInput && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, marginBottom: 8 }}>
+                    <thead>
+                      <tr style={{ background: '#eef2f7' }}>
+                        <th style={{ border: '1px solid #e5e7eb', padding: '4px 8px', textAlign: 'left' }}>能源品种</th>
+                        <th style={{ border: '1px solid #e5e7eb', padding: '4px 8px', textAlign: 'right' }}>折标能耗（tce）</th>
+                        <th style={{ border: '1px solid #e5e7eb', padding: '4px 8px', textAlign: 'right' }}>碳排放（tCO₂）</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.items.filter((it) => it.input > 0).map((it) => (
+                        <tr key={it.key}>
+                          <td style={{ border: '1px solid #e5e7eb', padding: '4px 8px' }}>{it.label}</td>
+                          <td style={{ border: '1px solid #e5e7eb', padding: '4px 8px', textAlign: 'right' }}>{fmt(it.energyTce)}</td>
+                          <td style={{ border: '1px solid #e5e7eb', padding: '4px 8px', textAlign: 'right' }}>{fmt3(it.carbonTco2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                <div>二氧化碳排放总量：<b>{result.hasAnyEnergyInput ? `${fmt3(result.totalCarbonTco2)} 吨CO₂` : '—'}</b></div>
+                <div style={{ marginTop: 4 }}>
+                  吨危废二氧化碳排放量：
+                  <b>{result.carbonPerWaste !== null ? `${result.carbonPerWaste.toFixed(3)} tCO₂/t` : '—'}</b>
+                  {result.carbonPerWaste === null && (
+                    <span style={{ color: '#9ca3af' }}>（需在「能源消耗」中填写年入厂危废及至少一项能源实物量）</span>
+                  )}
+                </div>
+                <div style={{ marginTop: 4, color: '#6b7280', fontSize: 12 }}>
+                  排放因子（tCO₂/tce）：原煤 2.7324 · 天然气 1.6743 · 柴油 2.1680 · 电力 1.8561 · 热力 2.8939
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // 类别内容
 const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
   const { indicatorInputs, updateIndicatorInput } = useStore();
@@ -109,6 +248,9 @@ const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
       </div>
       {category.indicators.map((ind) => {
         const input: IndicatorInput = indicatorInputs[ind.id] ?? { id: ind.id, value: '', isApplicable: true };
+        if (ind.computed) {
+          return <ComputedIndicator key={ind.id} indicator={ind} />;
+        }
         return ind.type === 'qualitative' ? (
           <QualitativeIndicator
             key={ind.id} indicator={ind} value={input.selectedLevel || 0}
@@ -130,7 +272,7 @@ const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
 };
 
 const Step2 = () => {
-  const { indicatorInputs, setStep, calculateEvaluation } = useStore();
+  const { indicatorInputs, setStep, calculateEvaluation, updateIndicatorInput } = useStore();
   const { message } = AntApp.useApp();
   const [activeTab, setActiveTab] = useState(0);
   const [showInputWarning, setShowInputWarning] = useState(false);
@@ -138,7 +280,8 @@ const Step2 = () => {
   const hasEvaluationInput = Object.values(indicatorInputs).some((input) =>
     input.isApplicable === false ||
     input.selectedLevel !== undefined ||
-    String(input.value ?? '').trim() !== ''
+    String(input.value ?? '').trim() !== '' ||
+    Object.values(input.subValues ?? {}).some((v) => String(v ?? '').trim() !== '')
   );
 
   const handleEvaluate = () => {
@@ -150,6 +293,22 @@ const Step2 = () => {
       });
       return;
     }
+
+    // 同步计算型指标的实物量计算结果（能源消耗 → 温室气体排放）
+    const energySubs = (indicatorInputs[ENERGY_SOURCE_ID]?.subValues ?? {}) as SubValues;
+    categories.forEach((cat) =>
+      cat.indicators.forEach((ind) => {
+        if (!ind.computed || !ind.computation) return;
+        const target = computedValueFor(ind.computation, energySubs);
+        const current = indicatorInputs[ind.id];
+        if (String(current?.value ?? '') !== target) {
+          updateIndicatorInput(ind.id, {
+            ...(current ?? { id: ind.id, value: '', isApplicable: true }),
+            value: target,
+          });
+        }
+      })
+    );
 
     const result = calculateEvaluation();
     if (!result) {

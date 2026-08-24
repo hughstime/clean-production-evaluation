@@ -138,7 +138,8 @@ export const useStore = create<Store>()(
           (input) =>
             input.isApplicable === false ||
             input.selectedLevel !== undefined ||
-            String(input.value ?? '').trim() !== ''
+            String(input.value ?? '').trim() !== '' ||
+            Object.values(input.subValues ?? {}).some((v) => String(v ?? '').trim() !== '')
         ).length;
       },
     }),
