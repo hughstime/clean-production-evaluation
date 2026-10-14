@@ -179,7 +179,7 @@ const ComputedIndicator = ({ indicator }: { indicator: IndicatorDefinition }) =>
                 <div>等价综合能耗：<b>{result.hasAnyEnergyInput ? `${fmt(result.totalEnergyTce)} 吨标准煤` : '—'}</b></div>
                 <div style={{ marginTop: 4 }}>
                   吨入厂危废综合能耗：
-                  <b style={{ color: result.energyPerWaste !== null && result.energyPerWaste <= 30 ? '#059669' : '#b45309' }}>
+                  <b style={{ color: result.energyPerWaste !== null && result.energyPerWaste <= 50 ? '#059669' : '#b45309' }}>
                     {result.energyPerWaste !== null ? `${result.energyPerWaste.toFixed(2)} kgce/t` : '—'}
                   </b>
                   {result.energyPerWaste === null && result.hasAnyEnergyInput && (
@@ -187,7 +187,7 @@ const ComputedIndicator = ({ indicator }: { indicator: IndicatorDefinition }) =>
                   )}
                 </div>
                 <div style={{ marginTop: 4, color: '#6b7280', fontSize: 12 }}>
-                  基准值：Ⅰ级 ≤30 · Ⅱ级 ≤40 · Ⅲ级 ≤50（kgce/t）
+                  基准值：Ⅰ级 ≤50 · Ⅱ级 ≤65 · Ⅲ级 ≤80（kgce/t）
                 </div>
               </>
             ) : (
@@ -215,10 +215,15 @@ const ComputedIndicator = ({ indicator }: { indicator: IndicatorDefinition }) =>
                 <div>二氧化碳排放总量：<b>{result.hasAnyEnergyInput ? `${fmt3(result.totalCarbonTco2)} 吨CO₂` : '—'}</b></div>
                 <div style={{ marginTop: 4 }}>
                   吨危废二氧化碳排放量：
-                  <b>{result.carbonPerWaste !== null ? `${result.carbonPerWaste.toFixed(3)} tCO₂/t` : '—'}</b>
+                  <b style={{ color: result.carbonPerWaste !== null && result.carbonPerWaste < 0.4 ? '#059669' : '#b45309' }}>
+                    {result.carbonPerWaste !== null ? `${result.carbonPerWaste.toFixed(3)} tCO₂/t` : '—'}
+                  </b>
                   {result.carbonPerWaste === null && (
                     <span style={{ color: '#9ca3af' }}>（需在「能源消耗」中填写年入厂危废及至少一项能源实物量）</span>
                   )}
+                </div>
+                <div style={{ marginTop: 4, color: '#6b7280', fontSize: 12 }}>
+                  基准值：Ⅰ级 &lt;0.4 · Ⅱ级 &lt;0.8 · Ⅲ级 &lt;1.5（tCO₂/t）
                 </div>
                 <div style={{ marginTop: 4, color: '#6b7280', fontSize: 12 }}>
                   排放因子（tCO₂/tce）：原煤 2.7324 · 天然气 1.6743 · 柴油 2.1680 · 电力 1.8561 · 热力 2.8939

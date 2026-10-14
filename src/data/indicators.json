@@ -210,9 +210,9 @@
           "computed": true,
           "computation": "energy",
           "benchmarks": {
-            "level1": "≤30",
-            "level2": "≤40",
-            "level3": "≤50"
+            "level1": "≤50",
+            "level2": "≤65",
+            "level3": "≤80"
           }
         }
       ]
@@ -247,21 +247,21 @@
       "indicators": [
         {
           "id": "denitration_agent_consumption",
-          "name": "吨入炉危废脱硝辅料消耗量",
+          "name": "吨入炉危废脱硝辅料消耗量（以NH3计）",
           "weight": 0.5,
           "type": "quantitative",
           "unit": "kg/t",
           "isRestrictive": false,
           "isBonus": false,
           "benchmarks": {
-            "level1": "≤2.5",
-            "level2": "≤3.0",
-            "level3": "≤3.5"
+            "level1": "<5",
+            "level2": "<6",
+            "level3": "<7"
           }
         },
         {
           "id": "desulfurization_agent_consumption",
-          "name": "吨入炉危废脱硫脱酸辅料消耗量",
+          "name": "吨入炉危废脱硫脱酸辅料消耗量（以Ca（OH）2计）",
           "weight": 0.5,
           "type": "quantitative",
           "unit": "kg/t",
@@ -412,9 +412,9 @@
           "computed": true,
           "computation": "carbon",
           "benchmarks": {
-            "level1": "",
-            "level2": "",
-            "level3": ""
+            "level1": "<0.4",
+            "level2": "<0.8",
+            "level3": "<1.5"
           }
         }
       ]

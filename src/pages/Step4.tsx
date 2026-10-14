@@ -3,13 +3,14 @@ import { message } from 'antd';
 import { useStore } from '../store';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { exportRawDataToExcel } from '../utils/excelExport';
 
 const NAMES = ['生产工艺及装备', '能源消耗', '水资源消耗', '原辅料资源消耗', '污染物产生与排放', '温室气体排放', '清洁生产管理', '资源循环利用'];
 const WEIGHTS = [0.22, 0.12, 0.06, 0.10, 0.30, 0.05, 0.15, 0.10];
 const KEYS = ['production_process', 'energy_consumption', 'water_consumption', 'raw_material_consumption', 'pollutant_emission', 'greenhouse_gas', 'clean_production_management', 'resource_recycling'];
 
 const Step4 = () => {
-  const { enterpriseInfo, evaluationResult, setStep, calculateEvaluation } = useStore();
+  const { enterpriseInfo, evaluationResult, indicatorInputs, setStep, calculateEvaluation } = useStore();
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +46,14 @@ const Step4 = () => {
     } catch { message.error('导出失败'); }
   };
 
+  const handleExcel = () => {
+    if (!enterpriseInfo) return;
+    try {
+      exportRawDataToExcel(enterpriseInfo, indicatorInputs, evaluationResult);
+      message.success('填报数据导出成功');
+    } catch { message.error('导出失败'); }
+  };
+
   if (!enterpriseInfo || !evaluationResult) {
     return <div className="form-card" style={{ textAlign: 'center', padding: 80 }}><p style={{ color: '#9ca3af' }}>加载中...</p></div>;
   }
@@ -62,6 +71,10 @@ const Step4 = () => {
         <button className="btn btn-primary" onClick={handlePDF}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
           导出PDF
+        </button>
+        <button className="btn" onClick={handleExcel}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          导出Excel
         </button>
         <button className="btn" onClick={() => window.print()}>🖨️ 打印</button>
       </div>
