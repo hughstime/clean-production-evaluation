@@ -15,6 +15,12 @@ const categories = indicatorData.categories as unknown as CategoryDefinition[];
 
 const LEVEL_NAMES: Record<number, string> = { 1: 'Ⅰ级', 2: 'Ⅱ级', 3: 'Ⅲ级' };
 
+// 与填报页一致的类别级"不适用"文案
+const NA_LABELS: Record<string, string> = {
+  resource_recycling: '未开展',
+  greenhouse_gas: '不准确、企业已自行开展碳核查',
+};
+
 const typeLabel = (ind: IndicatorDefinition): string => {
   if (ind.computed) return '定量（自动计算）';
   return ind.type === 'qualitative' ? '定性' : '定量';
@@ -76,7 +82,8 @@ export function exportRawDataToExcel(
       let filled = '—';
 
       if (!applicable) {
-        filled = '不适用';
+        const naLabel = NA_LABELS[cat.id] ?? '不适用';
+        filled = naLabel + (cat.id === 'greenhouse_gas' && input?.naNote ? `：${input.naNote}` : '');
       } else if (ind.computed) {
         const unitLabel = ind.computation === 'energy' ? 'kgce/t' : 'tCO₂/t';
         const v = ind.computation === 'energy' ? calc.energyPerWaste : calc.carbonPerWaste;
@@ -97,7 +104,7 @@ export function exportRawDataToExcel(
         ind.isRestrictive ? '是' : '否',
         ind.isBonus ? '是' : '否',
         filled,
-        applicable ? '适用' : '不适用',
+        applicable ? '适用' : (NA_LABELS[cat.id] ?? '不适用'),
         benchmarkText(ind.benchmarks.level1),
         benchmarkText(ind.benchmarks.level2),
         benchmarkText(ind.benchmarks.level3),

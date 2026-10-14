@@ -53,6 +53,8 @@ export interface IndicatorInput {
   isApplicable: boolean; // 是否适用
   /** 计算型指标的实物量子输入（年入厂危废/原煤/天然气/柴油/电力/热力） */
   subValues?: Record<string, string>;
+  /** 勾选"不准确、企业已自行开展碳核查"后填写的说明内容 */
+  naNote?: string;
 }
 
 // 评价得分结果类型

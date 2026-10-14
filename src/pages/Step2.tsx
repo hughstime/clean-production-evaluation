@@ -17,9 +17,15 @@ const TAB_ICONS: Record<string, string> = {
   '资源循环利用': 'M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2',
 };
 
+// 类别级"不适用"勾选配置：仅资源循环利用与温室气体排放保留勾选项，其余类别不显示
+const NA_LABELS: Record<string, string> = {
+  resource_recycling: '未开展',
+  greenhouse_gas: '不准确、企业已自行开展碳核查',
+};
+
 // 定性指标
-const QualitativeIndicator = ({ indicator, value, onChange, isApplicable, onApplicableChange }: {
-  indicator: IndicatorDefinition; value: number; onChange: (v: number) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void;
+const QualitativeIndicator = ({ indicator, value, onChange, isApplicable, onApplicableChange, naLabel }: {
+  indicator: IndicatorDefinition; value: number; onChange: (v: number) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void; naLabel?: string;
 }) => {
   const levels = [
     { key: 1, label: 'Ⅰ级', desc: typeof indicator.benchmarks.level1 === 'object' ? indicator.benchmarks.level1.description : indicator.benchmarks.level1 },
@@ -36,10 +42,12 @@ const QualitativeIndicator = ({ indicator, value, onChange, isApplicable, onAppl
           </div>
           <div className="indicator-meta">权重: <span className="weight-label">{indicator.weight}</span></div>
         </div>
-        <label className="na-checkbox">
-          <Checkbox checked={!isApplicable} onChange={(e) => onApplicableChange(!e.target.checked)} />
-          不适用
-        </label>
+        {naLabel && (
+          <label className="na-checkbox">
+            <Checkbox checked={!isApplicable} onChange={(e) => onApplicableChange(!e.target.checked)} />
+            {naLabel}
+          </label>
+        )}
       </div>
       {isApplicable && (
         <div className="qual-options">
@@ -59,8 +67,8 @@ const QualitativeIndicator = ({ indicator, value, onChange, isApplicable, onAppl
 };
 
 // 定量指标
-const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApplicableChange }: {
-  indicator: IndicatorDefinition; value: string; onChange: (v: string) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void;
+const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApplicableChange, naLabel }: {
+  indicator: IndicatorDefinition; value: string; onChange: (v: string) => void; isApplicable: boolean; onApplicableChange: (c: boolean) => void; naLabel?: string;
 }) => (
   <div className="indicator-card">
     <div className="indicator-card-header">
@@ -77,10 +85,12 @@ const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApp
         </div>
       </div>
       <div className="quant-input-group">
-        <label className="na-checkbox">
-          <Checkbox checked={!isApplicable} onChange={(e) => onApplicableChange(!e.target.checked)} />
-          不适用
-        </label>
+        {naLabel && (
+          <label className="na-checkbox">
+            <Checkbox checked={!isApplicable} onChange={(e) => onApplicableChange(!e.target.checked)} />
+            {naLabel}
+          </label>
+        )}
         <input
           type="number"
           className="quant-input"
@@ -97,7 +107,7 @@ const QuantitativeIndicator = ({ indicator, value, onChange, isApplicable, onApp
 // 计算型指标（能源消耗/温室气体排放：实物量填报 + 系统自动折算）
 const ENERGY_SOURCE_ID = 'waste_specific_energy';
 
-const ComputedIndicator = ({ indicator }: { indicator: IndicatorDefinition }) => {
+const ComputedIndicator = ({ indicator, naLabel }: { indicator: IndicatorDefinition; naLabel?: string }) => {
   const { indicatorInputs, updateIndicatorInput } = useStore();
   const isEnergy = indicator.computation === 'energy';
   const sourceInput = indicatorInputs[ENERGY_SOURCE_ID];
@@ -135,14 +145,30 @@ const ComputedIndicator = ({ indicator }: { indicator: IndicatorDefinition }) =>
             )}
           </div>
         </div>
-        <label className="na-checkbox">
-          <Checkbox
-            checked={!isApplicable}
-            onChange={(e) => updateIndicatorInput(indicator.id, { ...input, isApplicable: !e.target.checked })}
-          />
-          不适用
-        </label>
+        {naLabel && (
+          <label className="na-checkbox">
+            <Checkbox
+              checked={!isApplicable}
+              onChange={(e) => updateIndicatorInput(indicator.id, { ...input, isApplicable: !e.target.checked })}
+            />
+            {naLabel}
+          </label>
+        )}
       </div>
+
+      {/* 温室气体：勾选"不准确、企业已自行开展碳核查"后填写说明 */}
+      {!isEnergy && !isApplicable && (
+        <div style={{ marginTop: 12 }}>
+          <input
+            type="text"
+            className="quant-input"
+            style={{ width: '100%' }}
+            value={input.naNote ?? ''}
+            onChange={(e) => updateIndicatorInput(indicator.id, { ...input, naNote: e.target.value })}
+            placeholder="请填写说明（如企业自行碳核查的吨危废二氧化碳排放量、核查机构及报告编号等）"
+          />
+        </div>
+      )}
 
       {isApplicable && (
         <>
@@ -254,7 +280,7 @@ const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
       {category.indicators.map((ind) => {
         const input: IndicatorInput = indicatorInputs[ind.id] ?? { id: ind.id, value: '', isApplicable: true };
         if (ind.computed) {
-          return <ComputedIndicator key={ind.id} indicator={ind} />;
+          return <ComputedIndicator key={ind.id} indicator={ind} naLabel={NA_LABELS[category.id]} />;
         }
         return ind.type === 'qualitative' ? (
           <QualitativeIndicator
@@ -262,6 +288,7 @@ const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
             onChange={(val) => updateIndicatorInput(ind.id, { ...input, selectedLevel: val })}
             isApplicable={input.isApplicable !== false}
             onApplicableChange={(c) => updateIndicatorInput(ind.id, { ...input, isApplicable: c })}
+            naLabel={NA_LABELS[category.id]}
           />
         ) : (
           <QuantitativeIndicator
@@ -269,6 +296,7 @@ const CategoryContent = ({ category }: { category: CategoryDefinition }) => {
             onChange={(val) => updateIndicatorInput(ind.id, { ...input, value: val })}
             isApplicable={input.isApplicable !== false}
             onApplicableChange={(c) => updateIndicatorInput(ind.id, { ...input, isApplicable: c })}
+            naLabel={NA_LABELS[category.id]}
           />
         );
       })}
